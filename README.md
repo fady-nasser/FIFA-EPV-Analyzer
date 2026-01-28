@@ -6,6 +6,8 @@ A sophisticated football analytics dashboard for calculating and visualizing **E
 
 FIFA EPV Analyzer is an advanced sports analytics application that provides real-time tactical analysis of football matches. By processing tracking data and event information, the system evaluates possession value, team control over the pitch, and optimal decision-making for players in possession of the ball.
 
+This project was tested using data from the **FIFA World Cup 2022**.
+
 ## Visual Demonstrations
 
 ### EPV Heatmap Visualization
@@ -45,7 +47,6 @@ View detailed tactical information including defensive lines, zones, pitch contr
 **Pass Evaluation System**
 - Ranks all potential pass options by EPV added
 - Success probability for each passing lane
-- Risk-reward analysis for decision support
 
 **Interactive Visualization**
 - Real-time pitch representation with player positions
@@ -97,6 +98,10 @@ The application expects tracking data and event data in specific formats:
 - **Visualization Toggle**: Switch between EPV heatmap and pitch control views
 - **Dark Mode**: Toggle between light and dark themes
 - **Pass Evaluation**: Click on players to see potential pass options and their EPV impact
+
+## Demo Tutorial
+
+For a comprehensive guide on how to use the application, watch our [demo tutorial video](https://drive.google.com/drive/folders/12CoJQfMZZFGwyfVHSP6VTMamR1Nl7nwL).
 
 ## Project Structure
 
@@ -179,8 +184,18 @@ Contributions are welcome! Please ensure that any pull requests:
 
 ## Acknowledgments
 
+This project was developed under the supervision of **Dr. Tamer Basha**.
+
 This project implements research from:
 - Fernández, J., Bornn, L., & Cervone, D. (2019). "Decomposing the Immeasurable: The Flow of Expected Possession Value"
+
+## Contributors
+
+- **Seif Amr**
+- **Marvin Ehab**
+- **Fady Nasser**
+- **Mahmoud Zahran**
+- **Bassel Mostafa**
 
 ## License
 
