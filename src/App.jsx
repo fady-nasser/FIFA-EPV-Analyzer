@@ -42,6 +42,18 @@ export default function App() {
     // Upload modal state
     const [showUploadModal, setShowUploadModal] = useState(false);
 
+    // Dark mode state
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const saved = localStorage.getItem('theme');
+        return saved ? saved === 'dark' : true; // Default to dark
+    });
+
+    // Apply theme to document
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    }, [isDarkMode]);
+
     // Computed state
     const [epvSurface, setEpvSurface] = useState(null);
     const [passOptions, setPassOptions] = useState([]);
@@ -454,7 +466,7 @@ export default function App() {
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                 zIndex: 50
             }}>
-                <h1 className="dashboard__title">⚽ EPV Analytics Dashboard</h1>
+                <h1 className="dashboard__title"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.5rem', verticalAlign: 'middle' }}><circle cx="12" cy="12" r="10" /><path d="m4.93 4.93 4.24 4.24" /><path d="m14.83 9.17 4.24-4.24" /><path d="m14.83 14.83 4.24 4.24" /><path d="m9.17 14.83-4.24 4.24" /><path d="m12 2v4" /><path d="m12 18v4" /><path d="m2 12h4" /><path d="m18 12h4" /></svg>EPV Analytics Dashboard</h1>
 
                 {/* Team Focus Controls */}
                 <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px' }}>
@@ -510,39 +522,38 @@ export default function App() {
                 </div>
 
                 {/* Pitch Style Controls */}
-                <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '8px', marginLeft: '1rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-tertiary)', padding: '4px', borderRadius: '12px', marginLeft: '1rem' }}>
                     <button
                         onClick={() => setPitchStyle('heatmap')}
                         style={{
                             padding: '0.25rem 0.75rem',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             border: 'none',
-                            background: pitchStyle === 'heatmap' ? 'var(--accent)' : 'transparent',
-                            color: pitchStyle === 'heatmap' ? 'white' : 'var(--text-muted)',
+                            background: pitchStyle === 'heatmap' ? 'var(--text-primary)' : 'transparent',
+                            color: pitchStyle === 'heatmap' ? 'var(--bg-primary)' : 'var(--text-muted)',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
                             fontWeight: 500,
                             transition: 'all 0.2s'
                         }}
                     >
-                        🔥 Heatmap
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.35rem', verticalAlign: 'middle' }}><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M3 9h18" /><path d="M3 15h18" /><path d="M9 3v18" /><path d="M15 3v18" /></svg>Heatmap
                     </button>
                     <button
                         onClick={() => setPitchStyle('tactical')}
                         style={{
                             padding: '0.25rem 0.75rem',
-                            borderRadius: '6px',
+                            borderRadius: '8px',
                             border: 'none',
-                            background: pitchStyle === 'tactical' ? '#1f2937' : 'transparent',
-                            color: pitchStyle === 'tactical' ? 'white' : 'var(--text-muted)',
+                            background: pitchStyle === 'tactical' ? 'var(--text-primary)' : 'transparent',
+                            color: pitchStyle === 'tactical' ? 'var(--bg-primary)' : 'var(--text-muted)',
                             cursor: 'pointer',
                             fontSize: '0.875rem',
                             fontWeight: 500,
-                            border: pitchStyle === 'tactical' ? '1px solid var(--border-subtle)' : 'none',
                             transition: 'all 0.2s'
                         }}
                     >
-                        📋 Tactical
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.35rem', verticalAlign: 'middle' }}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><line x1="10" x2="8" y1="9" y2="9" /></svg>Tactical
                     </button>
                 </div>
 
@@ -559,11 +570,47 @@ export default function App() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {/* Dark Mode Toggle */}
+                    <button
+                        onClick={() => setIsDarkMode(!isDarkMode)}
+                        style={{
+                            width: '40px',
+                            height: '40px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'var(--bg-tertiary)',
+                            border: '1px solid var(--border-subtle)',
+                            borderRadius: '12px',
+                            color: 'var(--text-primary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                        title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    >
+                        {isDarkMode ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="4" />
+                                <path d="M12 2v2" />
+                                <path d="M12 20v2" />
+                                <path d="m4.93 4.93 1.41 1.41" />
+                                <path d="m17.66 17.66 1.41 1.41" />
+                                <path d="M2 12h2" />
+                                <path d="M20 12h2" />
+                                <path d="m6.34 17.66-1.41 1.41" />
+                                <path d="m19.07 4.93-1.41 1.41" />
+                            </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                            </svg>
+                        )}
+                    </button>
                     {currentFrame?.eventType && (
                         <span style={{
                             padding: '0.25rem 0.75rem',
                             background: 'var(--bg-tertiary)',
-                            borderRadius: '4px',
+                            borderRadius: '12px',
                             fontSize: '0.875rem'
                         }}>
                             {currentFrame.eventType}
@@ -574,39 +621,38 @@ export default function App() {
                             onClick={() => setShowUploadModal(!showUploadModal)}
                             style={{
                                 padding: '0.6rem 1.2rem',
-                                background: '#3b82f6',
+                                background: 'var(--accent)',
                                 border: 'none',
-                                borderRadius: '8px',
-                                color: 'white',
+                                borderRadius: '12px',
+                                color: 'var(--bg-primary)',
                                 fontSize: '0.875rem',
                                 fontWeight: 600,
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '0.5rem',
-                                boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.5)',
                                 transition: 'all 0.2s'
                             }}
                         >
-                            ☁️ Upload Data
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.35rem', verticalAlign: 'middle' }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" x2="12" y1="3" y2="15" /></svg>Upload Data
                         </button>
                         {showUploadModal && (
                             <div style={{
                                 position: 'absolute',
                                 top: '120%',
                                 right: 0,
-                                background: '#1e293b',
-                                border: '1px solid #334155',
-                                borderRadius: '12px',
+                                background: 'var(--bg-secondary)',
+                                border: '1px solid var(--border-medium)',
+                                borderRadius: '16px',
                                 padding: '0.5rem',
                                 minWidth: '300px',
-                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
+                                boxShadow: 'var(--shadow-lg)',
                                 zIndex: 1000,
                                 animation: 'fadeIn 0.2s ease-out'
                             }}>
-                                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid #334155', marginBottom: '0.5rem' }}>
-                                    <h3 style={{ margin: 0, fontSize: '1rem', color: '#f1f5f9' }}>Data Source</h3>
-                                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>Select your match data file</p>
+                                <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-subtle)', marginBottom: '0.5rem' }}>
+                                    <h3 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Data Source</h3>
+                                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Select your match data file</p>
                                 </div>
 
                                 <label style={{
@@ -615,15 +661,12 @@ export default function App() {
                                     gap: '1rem',
                                     padding: '1rem',
                                     margin: '0.5rem',
-                                    background: '#0f172a',
-                                    borderRadius: '8px',
+                                    background: 'var(--bg-tertiary)',
+                                    borderRadius: '12px',
                                     cursor: 'pointer',
-                                    border: '1px solid #334155',
+                                    border: '1px solid var(--border-subtle)',
                                     transition: 'background 0.2s'
-                                }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = '#1e293b'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = '#0f172a'}
-                                >
+                                }}>
                                     <input
                                         type="file"
                                         accept=".json"
@@ -633,10 +676,10 @@ export default function App() {
                                             setShowUploadModal(false);
                                         }}
                                     />
-                                    <div style={{ fontSize: '1.5rem' }}>📊</div>
+                                    <div style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" x2="18" y1="20" y2="10" /><line x1="12" x2="12" y1="20" y2="4" /><line x1="6" x2="6" y1="20" y2="14" /></svg></div>
                                     <div>
-                                        <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.9rem' }}>Event Data</div>
-                                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>JSON file with events</div>
+                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9rem' }}>Event Data</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>JSON file with events</div>
                                     </div>
                                 </label>
 
@@ -646,15 +689,12 @@ export default function App() {
                                     gap: '1rem',
                                     padding: '1rem',
                                     margin: '0.5rem',
-                                    background: '#0f172a',
-                                    borderRadius: '8px',
+                                    background: 'var(--bg-tertiary)',
+                                    borderRadius: '12px',
                                     cursor: 'pointer',
-                                    border: '1px solid #334155',
+                                    border: '1px solid var(--border-subtle)',
                                     transition: 'background 0.2s'
-                                }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = '#1e293b'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = '#0f172a'}
-                                >
+                                }}>
                                     <input
                                         type="file"
                                         accept=".jsonl,.json"
@@ -664,14 +704,14 @@ export default function App() {
                                             setShowUploadModal(false);
                                         }}
                                     />
-                                    <div style={{ fontSize: '1.5rem' }}>📍</div>
+                                    <div style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg></div>
                                     <div>
-                                        <div style={{ fontWeight: 600, color: '#e2e8f0', fontSize: '0.9rem' }}>Tracking Data</div>
-                                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>JSONL with frame data</div>
+                                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.9rem' }}>Tracking Data</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>JSONL with frame data</div>
                                     </div>
                                 </label>
 
-                                <div style={{ borderTop: '1px solid #334155', margin: '0.5rem 0.5rem 0', padding: '0.75rem 0.25rem 0.25rem' }}>
+                                <div style={{ borderTop: '1px solid var(--border-subtle)', margin: '0.5rem 0.5rem 0', padding: '0.75rem 0.25rem 0.25rem' }}>
                                     <button
                                         onClick={() => {
                                             handleDataLoaded(null, 'demo');
@@ -680,17 +720,15 @@ export default function App() {
                                         style={{
                                             width: '100%',
                                             padding: '0.75rem',
-                                            background: 'rgba(59, 130, 246, 0.1)',
-                                            border: '1px dashed #3b82f6',
-                                            borderRadius: '6px',
-                                            color: '#60a5fa',
+                                            background: 'var(--bg-tertiary)',
+                                            border: '1px dashed var(--border-medium)',
+                                            borderRadius: '12px',
+                                            color: 'var(--text-secondary)',
                                             cursor: 'pointer',
                                             fontSize: '0.85rem',
                                             fontWeight: 500,
                                             transition: 'all 0.2s'
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
                                     >
                                         Load Sample Data
                                     </button>

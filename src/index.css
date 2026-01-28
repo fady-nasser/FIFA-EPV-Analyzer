@@ -2,53 +2,96 @@
    Football EPV Dashboard - Design System
    ============================================ */
 
+/* Import Poppins Font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* Dark Mode (Default) */
 :root {
-  /* Color Palette */
-  --bg-primary: #0a0e17;
-  --bg-secondary: #111827;
-  --bg-tertiary: #1f2937;
-  --bg-glass: rgba(17, 24, 39, 0.85);
+  /* Neutral Color Palette - Dark Mode */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-tertiary: #1f1f1f;
+  --bg-glass: rgba(20, 20, 20, 0.9);
+  --bg-elevated: #2a2a2a;
 
   /* Pitch Colors */
   --pitch-green: #1a472a;
   --pitch-green-light: #2d5a3d;
   --pitch-lines: rgba(255, 255, 255, 0.9);
 
-  /* Team Colors */
+  /* Team Colors - Blue for Home, Red for Away */
   --home-team: #3b82f6;
   --home-team-light: #60a5fa;
   --away-team: #ef4444;
   --away-team-light: #f87171;
 
-  /* EPV Gradient */
+  /* EPV Gradient - Keep for visualization */
   --epv-low: #1e40af;
-  --epv-mid: #fbbf24;
+  --epv-mid: #a3a3a3;
   --epv-high: #16a34a;
 
-  /* Text Colors */
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  /* Text Colors - Neutral */
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-muted: #737373;
 
-  /* Accent */
-  --accent: #8b5cf6;
-  --accent-glow: rgba(139, 92, 246, 0.4);
+  /* Accent - Neutral gray */
+  --accent: #e5e5e5;
+  --accent-glow: rgba(229, 229, 229, 0.2);
 
   /* Borders */
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-medium: rgba(255, 255, 255, 0.15);
 
   /* Shadows */
-  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.15);
+  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 40px rgba(255, 255, 255, 0.05);
 
-  /* Typography */
-  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* Typography - Poppins */
+  --font-main: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
 
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-medium: 250ms ease;
   --transition-slow: 400ms ease;
+}
+
+/* Light Mode */
+[data-theme="light"] {
+  --bg-primary: #fafafa;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e5e5e5;
+  --bg-glass: rgba(250, 250, 250, 0.9);
+  --bg-elevated: #ffffff;
+
+  /* Team Colors - Blue for Home, Red for Away */
+  --home-team: #3b82f6;
+  --home-team-light: #60a5fa;
+  --away-team: #ef4444;
+  --away-team-light: #f87171;
+
+  /* Text Colors */
+  --text-primary: #0a0a0a;
+  --text-secondary: #525252;
+  --text-muted: #737373;
+
+  /* Accent */
+  --accent: #262626;
+  --accent-glow: rgba(38, 38, 38, 0.1);
+
+  /* Borders */
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-medium: rgba(0, 0, 0, 0.12);
+
+  /* Shadows */
+  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 40px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -82,10 +125,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background:
-    radial-gradient(ellipse at 20% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 100%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-    var(--bg-primary);
+  background: var(--bg-primary);
 }
 
 .dashboard__header {
@@ -102,10 +142,9 @@ body {
 .dashboard__title {
   font-size: 1.25rem;
   font-weight: 600;
-  background: linear-gradient(135deg, var(--text-primary), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
+  display: none;
+  align-items: center;
 }
 
 .dashboard__teams {
@@ -120,7 +159,7 @@ body {
   gap: 0.75rem;
   padding: 0.5rem 1rem;
   background: var(--bg-tertiary);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
 }
 
@@ -171,7 +210,7 @@ body {
   width: 100%;
   max-width: 1000px;
   aspect-ratio: 105 / 68;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
@@ -190,7 +229,7 @@ body {
   width: 320px;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border-subtle);
   padding: 1.5rem;
   display: flex;
@@ -246,7 +285,7 @@ body {
   gap: 0.5rem;
   padding: 1rem;
   background: var(--bg-tertiary);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
 }
 
@@ -285,7 +324,7 @@ body {
   gap: 0.75rem;
   padding: 0.75rem;
   background: var(--bg-tertiary);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -353,7 +392,7 @@ body {
   justify-content: center;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--text-primary);
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -426,7 +465,7 @@ body {
   padding: 0.5rem;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-subtle);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 0.875rem;
   cursor: pointer;
@@ -475,7 +514,7 @@ body {
   background: var(--bg-glass);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-medium);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 0.875rem;
   pointer-events: none;
   z-index: 1000;
@@ -558,10 +597,7 @@ body {
   justify-content: center;
   height: 100vh;
   padding: 2rem;
-  background:
-    radial-gradient(ellipse at 30% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 70% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-    var(--bg-primary);
+  background: var(--bg-primary);
 }
 
 .file-upload__header {
@@ -572,10 +608,7 @@ body {
 .file-upload__title {
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--text-primary), var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
 
@@ -597,7 +630,7 @@ body {
   padding: 2rem;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border-subtle);
   text-align: center;
   transition: all var(--transition-medium);
@@ -632,15 +665,15 @@ body {
   justify-content: center;
   padding: 0.75rem 1.5rem;
   background: var(--accent);
-  color: white;
-  border-radius: 8px;
+  color: var(--bg-primary);
+  border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .file-upload__btn:hover {
-  background: #7c3aed;
+  opacity: 0.9;
   transform: scale(1.02);
 }
 
@@ -668,17 +701,16 @@ body {
 .file-upload__demo-btn {
   padding: 0.75rem 2rem;
   background: transparent;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 8px;
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .file-upload__demo-btn:hover {
-  background: var(--accent);
-  color: white;
+  background: var(--bg-tertiary);
 }
 
 /* EPV Legend Update */

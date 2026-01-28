@@ -30,7 +30,7 @@ export default function EPVPanel({
                 </span>
                 {ballCarrier && (
                     <span className="epv-panel__subtext">
-                        Ball: #{ballCarrier.jerseyNum} {ballCarrier.position}
+                        Ball: #{ballCarrier.jerseyNum}
                     </span>
                 )}
             </div>
@@ -86,9 +86,6 @@ export default function EPVPanel({
                                     <span className="pass-option__rank">{index + 1}</span>
                                     <span className="pass-option__player">
                                         #{option.target.jerseyNum}
-                                        <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem', fontSize: '0.75rem' }}>
-                                            {option.target.position || ''}
-                                        </span>
                                     </span>
                                     <span className={`pass-option__epva ${epvaClass}`}>
                                         {option.epvAdded >= 0 ? '+' : ''}{(option.epvAdded * 100).toFixed(2)}%
