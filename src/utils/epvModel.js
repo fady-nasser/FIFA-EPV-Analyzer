@@ -248,7 +248,71 @@ export function calculateDecomposedEPV(ballCarrier, gameState, options = {}) {
 }
 
 /**
- * Generate EPV surface for entire pitch
+ * Generate GLOBAL EPV surface (statistics only - no player tracking)
+ * 
+ * This is the "baseline" EPV that treats defenders as averaged out.
+ * It only considers the x,y position's inherent value for scoring.
+ * 
+ * Used when Contextual Analysis toggle is OFF.
+ * 
+ * @param {Object} options - Grid options
+ * @returns {Object} Global EPV grid data
+ */
+export function generateGlobalEPVSurface(options = {}) {
+    const {
+        pitchLength = 105,
+        pitchWidth = 68,
+        resolution = 2,
+        attackingRight = true
+    } = options;
+
+    const gridWidth = Math.ceil(pitchLength / resolution);
+    const gridHeight = Math.ceil(pitchWidth / resolution);
+
+    const grid = [];
+    let maxEPV = -1;
+    let minEPV = 1;
+
+    for (let yi = 0; yi < gridHeight; yi++) {
+        const row = [];
+        for (let xi = 0; xi < gridWidth; xi++) {
+            const x = (xi * resolution) - (pitchLength / 2) + (resolution / 2);
+            const y = (yi * resolution) - (pitchWidth / 2) + (resolution / 2);
+
+            // Global EPV is just the progression value
+            // This represents the baseline probability of scoring from this position
+            // when defenders are "averaged out" (neutral pitch control = 0.5)
+            const progression = progressionValue(x, y, attackingRight);
+
+            // For global EPV, we assume neutral control (0.5)
+            // which maps to 0 on the divergent scale
+            // So Global EPV shows pure positional value without considering pressure
+            const epv = progression;  // 0 to 1 scale for global
+
+            row.push(epv);
+
+            maxEPV = Math.max(maxEPV, epv);
+            minEPV = Math.min(minEPV, epv);
+        }
+        grid.push(row);
+    }
+
+    return {
+        grid,
+        gridWidth,
+        gridHeight,
+        resolution,
+        pitchLength,
+        pitchWidth,
+        maxEPV,
+        minEPV,
+        isGlobal: true,  // Flag to indicate this is global EPV
+        pitchControlSurface: null
+    };
+}
+
+/**
+ * Generate EPV surface for entire pitch (Real-Time - with pitch control)
  * 
  * @param {Object} gameState - Current game state
  * @param {Object} options - Grid options
@@ -398,4 +462,57 @@ export function getEPVAlpha(value) {
     const magnitude = Math.abs(value);
     // Base 0.2 (slightly visible everywhere) -> Max 0.7 for strong control
     return 0.2 + magnitude * 0.5;
+}
+
+/**
+ * Color interpolation for GLOBAL EPV visualization (0 to 1 scale)
+ * Uses a warm gradient: Blue (low value) -> Green (medium) -> Yellow -> Red (high value)
+ * 
+ * @param {number} value - Global EPV value (0 to 1)
+ * @returns {string} RGB color string
+ */
+export function getGlobalEPVColor(value) {
+    const clamped = Math.max(0, Math.min(1, value));
+
+    let r, g, b;
+
+    if (clamped < 0.25) {
+        // Blue to Cyan (very low value positions)
+        const t = clamped / 0.25;
+        r = Math.round(30 + t * 20);
+        g = Math.round(60 + t * 140);
+        b = Math.round(180 - t * 40);
+    } else if (clamped < 0.5) {
+        // Cyan to Green (low to medium)
+        const t = (clamped - 0.25) / 0.25;
+        r = Math.round(50 + t * 50);
+        g = Math.round(200 + t * 30);
+        b = Math.round(140 - t * 80);
+    } else if (clamped < 0.75) {
+        // Green to Yellow (medium to high)
+        const t = (clamped - 0.5) / 0.25;
+        r = Math.round(100 + t * 155);
+        g = Math.round(230 - t * 30);
+        b = Math.round(60 - t * 30);
+    } else {
+        // Yellow to Red (high to very high value)
+        const t = (clamped - 0.75) / 0.25;
+        r = 255;
+        g = Math.round(200 - t * 140);
+        b = Math.round(30 + t * 20);
+    }
+
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
+/**
+ * Get alpha for Global EPV overlay
+ * Higher EPV = more visible
+ * 
+ * @param {number} value - Global EPV value (0-1)
+ * @returns {number} Alpha (0.3-0.7)
+ */
+export function getGlobalEPVAlpha(value) {
+    // Use value directly - higher value should be more visible
+    return 0.3 + value * 0.4;
 }

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { getEPVColor, getEPVAlpha } from '../utils/epvModel.js';
+import { getEPVColor, getEPVAlpha, getGlobalEPVColor, getGlobalEPVAlpha } from '../utils/epvModel.js';
 
 /**
  * Pitch Component
@@ -321,7 +321,7 @@ function drawPitch(ctx, offsetX, offsetY, width, height, transparentBackground =
 
 // Helper: Draw EPV overlay
 function drawEPVOverlay(ctx, epvSurface, offsetX, offsetY, width, height) {
-    const { grid, gridWidth, gridHeight } = epvSurface;
+    const { grid, gridWidth, gridHeight, isGlobal } = epvSurface;
 
     const cellWidth = width / gridWidth;
     const cellHeight = height / gridHeight;
@@ -329,8 +329,10 @@ function drawEPVOverlay(ctx, epvSurface, offsetX, offsetY, width, height) {
     for (let yi = 0; yi < gridHeight; yi++) {
         for (let xi = 0; xi < gridWidth; xi++) {
             const epv = grid[yi][xi];
-            const color = getEPVColor(epv);
-            const alpha = getEPVAlpha(epv);
+
+            // Use different color schemes for Global vs Real-Time EPV
+            const color = isGlobal ? getGlobalEPVColor(epv) : getEPVColor(epv);
+            const alpha = isGlobal ? getGlobalEPVAlpha(epv) : getEPVAlpha(epv);
 
             ctx.fillStyle = color.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
             ctx.fillRect(

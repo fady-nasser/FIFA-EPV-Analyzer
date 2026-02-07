@@ -10,7 +10,7 @@ import {
     getTeammates,
     getOpponents
 } from './utils/dataLoader.js';
-import { generateEPVSurface, getEPVAt, calculateEPV } from './utils/epvModel.js';
+import { generateEPVSurface, generateGlobalEPVSurface, getEPVAt, calculateEPV } from './utils/epvModel.js';
 import { findPassOptions } from './utils/passEvaluator.js';
 
 /**
@@ -29,6 +29,9 @@ export default function App() {
     const [viewMode, setViewMode] = useState('both');
     // Pitch style: 'heatmap' or 'tactical'
     const [pitchStyle, setPitchStyle] = useState('heatmap');
+
+    // Contextual Analysis Toggle: OFF = Global EPV (statistics), ON = Real-Time EPV (with pitch control)
+    const [contextualAnalysis, setContextualAnalysis] = useState(true);
 
     // Playback state
     const [currentFrameIndex, setCurrentFrameIndex] = useState(0);
@@ -198,12 +201,28 @@ export default function App() {
         const carrier = findBallCarrier(currentFrame);
         setBallCarrier(carrier);
 
+        // Low resolution during playback to prevent lag
+        const resolution = isPlaying ? 4 : 2;
+
+        // If contextual analysis is OFF, show Global EPV (statistics only)
+        if (!contextualAnalysis) {
+            // Global EPV - static heatmap based on position only
+            const surface = generateGlobalEPVSurface({
+                pitchLength: currentFrame.pitchLength || 105,
+                pitchWidth: currentFrame.pitchWidth || 68,
+                resolution,
+                attackingRight: currentFrame.homeAttackingRight
+            });
+            setEpvSurface(surface);
+            setCurrentEPV(carrier ? surface.grid[Math.floor((carrier.y + 34) / resolution)]?.[Math.floor((carrier.x + 52.5) / resolution)] || 0 : 0);
+            setPassOptions([]);
+            return;
+        }
+
+        // Contextual Analysis is ON - use Real-Time EPV with Pitch Control
         if (!carrier) {
             setCurrentEPV(0);
             setPassOptions([]);
-
-            // Low resolution during playback to prevent lag
-            const resolution = isPlaying ? 4 : 2;
 
             const gameState = {
                 teamPlayers: currentFrame.homePlayers,
@@ -246,10 +265,7 @@ export default function App() {
             attackingRight
         };
 
-        // Dynamic resolution based on playback state
-        // 4m grid during playback (fast) vs 2m grid when paused (detailed)
-        const resolution = isPlaying ? 4 : 2;
-
+        // Real-Time EPV = EPV_grid × Pitch_Control
         const surface = generateEPVSurface(gameState, {
             pitchLength: currentFrame.pitchLength || 105,
             pitchWidth: currentFrame.pitchWidth || 68,
@@ -271,7 +287,7 @@ export default function App() {
             setPassOptions(options);
         }
 
-    }, [currentFrame, currentFrameIndex, isPlaying, playbackSpeed, viewMode]);
+    }, [currentFrame, currentFrameIndex, isPlaying, playbackSpeed, viewMode, contextualAnalysis]);
 
     // Playback controls
     const handlePlay = useCallback(() => {
@@ -555,6 +571,83 @@ export default function App() {
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.35rem', verticalAlign: 'middle' }}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><line x1="10" x2="8" y1="9" y2="9" /></svg>Tactical
                     </button>
+                </div>
+
+                {/* Contextual Analysis Toggle */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    background: 'var(--bg-tertiary)',
+                    padding: '6px 12px',
+                    borderRadius: '12px',
+                    marginLeft: '1rem',
+                    border: '1px solid var(--border-subtle)'
+                }}>
+                    <span style={{
+                        fontSize: '0.75rem',
+                        color: !contextualAnalysis ? 'var(--text-primary)' : 'var(--text-muted)',
+                        fontWeight: !contextualAnalysis ? 600 : 400,
+                        transition: 'all 0.2s'
+                    }}>
+                        Statistics
+                    </span>
+
+                    {/* Toggle Switch */}
+                    <button
+                        onClick={() => setContextualAnalysis(!contextualAnalysis)}
+                        style={{
+                            position: 'relative',
+                            width: '44px',
+                            height: '24px',
+                            borderRadius: '12px',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                            background: contextualAnalysis
+                                ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+                                : 'var(--bg-secondary)',
+                            boxShadow: contextualAnalysis
+                                ? '0 0 12px rgba(34, 197, 94, 0.4)'
+                                : 'inset 0 1px 3px rgba(0,0,0,0.2)',
+                            transition: 'all 0.3s ease'
+                        }}
+                        title={contextualAnalysis ? 'Real-Time EPV (considers player positions)' : 'Global EPV (statistics only)'}
+                    >
+                        <div style={{
+                            position: 'absolute',
+                            top: '2px',
+                            left: contextualAnalysis ? '22px' : '2px',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            background: '#ffffff',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                            transition: 'left 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            {contextualAnalysis ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="4" x2="20" y1="12" y2="12" />
+                                </svg>
+                            )}
+                        </div>
+                    </button>
+
+                    <span style={{
+                        fontSize: '0.75rem',
+                        color: contextualAnalysis ? '#22c55e' : 'var(--text-muted)',
+                        fontWeight: contextualAnalysis ? 600 : 400,
+                        transition: 'all 0.2s'
+                    }}>
+                        Real-Time
+                    </span>
                 </div>
 
                 <div className="dashboard__teams">
