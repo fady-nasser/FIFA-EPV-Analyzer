@@ -13,7 +13,9 @@ export default function Pitch({
     onPlayerHover,
     onPlayerClick,
     ballCarrier,
-    showEPVOverlay = true
+    hypotheticalCarrier,
+    showEPVOverlay = true,
+    isPaused = false
 }) {
     const epvCanvasRef = useRef(null);
     const canvasRef = useRef(null);
@@ -117,20 +119,21 @@ export default function Pitch({
         drawPitch(ctx, offsetX, offsetY, drawWidth, drawHeight, showEPVOverlay);
 
         // Draw pass arrows
-        if (passOptions && ballCarrier) {
-            drawPassArrows(ctx, passOptions, ballCarrier, toCanvasCoords, hoveredPlayer);
+        if (passOptions && (hypotheticalCarrier || ballCarrier)) {
+            const arrowSource = hypotheticalCarrier || ballCarrier;
+            drawPassArrows(ctx, passOptions, arrowSource, toCanvasCoords, hoveredPlayer, !!hypotheticalCarrier);
         }
 
         // Draw players
-        drawPlayers(ctx, frame.homePlayers, 'home', toCanvasCoords, ballCarrier, hoveredPlayer);
-        drawPlayers(ctx, frame.awayPlayers, 'away', toCanvasCoords, ballCarrier, hoveredPlayer);
+        drawPlayers(ctx, frame.homePlayers, 'home', toCanvasCoords, ballCarrier, hoveredPlayer, hypotheticalCarrier);
+        drawPlayers(ctx, frame.awayPlayers, 'away', toCanvasCoords, ballCarrier, hoveredPlayer, hypotheticalCarrier);
 
         // Draw ball
         if (frame.ball) {
             drawBall(ctx, frame.ball, toCanvasCoords);
         }
 
-    }, [frame, dimensions, epvSurface, passOptions, hoveredPlayer, ballCarrier, showEPVOverlay, toCanvasCoords]);
+    }, [frame, dimensions, epvSurface, passOptions, hoveredPlayer, ballCarrier, hypotheticalCarrier, showEPVOverlay, toCanvasCoords]);
 
     // Mouse move handler for hover detection
     const handleMouseMove = useCallback((e) => {
@@ -213,7 +216,7 @@ export default function Pitch({
                 style={{
                     position: 'relative',
                     zIndex: 1,
-                    cursor: hoveredPlayer ? 'pointer' : 'default'
+                    cursor: hoveredPlayer ? 'pointer' : (isPaused ? 'crosshair' : 'default')
                 }}
             />
         </div>
@@ -346,34 +349,60 @@ function drawEPVOverlay(ctx, epvSurface, offsetX, offsetY, width, height) {
 }
 
 // Helper: Draw players
-function drawPlayers(ctx, players, team, toCanvasCoords, ballCarrier, hoveredPlayer) {
+function drawPlayers(ctx, players, team, toCanvasCoords, ballCarrier, hoveredPlayer, hypotheticalCarrier) {
     const teamColor = team === 'home' ? '#3b82f6' : '#ef4444';
     const teamColorLight = team === 'home' ? '#60a5fa' : '#f87171';
+    const isInWhatIfMode = !!hypotheticalCarrier;
 
     players.forEach(player => {
         const { x, y } = toCanvasCoords(player.x, player.y);
         const radius = 12;
 
         const isBallCarrier = ballCarrier &&
+            ballCarrier.team === team &&
             (player.id === ballCarrier.id || player.jerseyNum === ballCarrier.jerseyNum);
+        const isHypothetical = hypotheticalCarrier &&
+            hypotheticalCarrier.team === team &&
+            (player.id === hypotheticalCarrier.id || player.jerseyNum === hypotheticalCarrier.jerseyNum);
         const isHovered = hoveredPlayer &&
             (player.id === hoveredPlayer.id || player.jerseyNum === hoveredPlayer.jerseyNum);
 
-        // Outer glow for ball carrier
+        // Hypothetical carrier — pulsing cyan/teal dashed ring
+        if (isHypothetical) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, radius + 9, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([5, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+        }
+
+        // Outer glow for actual ball carrier
         if (isBallCarrier) {
+            const glowAlpha = isInWhatIfMode ? 0.15 : 0.4;
+            const ringAlpha = isInWhatIfMode ? 0.3 : 0.6;
+
             ctx.beginPath();
             ctx.arc(x, y, radius + 8, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.4)';
+            ctx.fillStyle = `rgba(251, 191, 36, ${glowAlpha})`;
             ctx.fill();
 
             ctx.beginPath();
             ctx.arc(x, y, radius + 5, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(251, 191, 36, 0.6)';
+            ctx.fillStyle = `rgba(251, 191, 36, ${ringAlpha})`;
             ctx.fill();
         }
 
         // Hover effect
-        if (isHovered && !isBallCarrier) {
+        if (isHovered && !isBallCarrier && !isHypothetical) {
             ctx.beginPath();
             ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(139, 92, 246, 0.5)';
@@ -391,8 +420,8 @@ function drawPlayers(ctx, players, team, toCanvasCoords, ballCarrier, hoveredPla
         ctx.fill();
 
         // Border
-        ctx.strokeStyle = isBallCarrier ? '#fbbf24' : 'rgba(255, 255, 255, 0.8)';
-        ctx.lineWidth = isBallCarrier ? 3 : 2;
+        ctx.strokeStyle = isHypothetical ? '#06b6d4' : isBallCarrier ? '#fbbf24' : 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = isHypothetical ? 3 : isBallCarrier ? 3 : 2;
         ctx.stroke();
 
         // Jersey number
@@ -493,8 +522,8 @@ function drawBall(ctx, ball, toCanvasCoords) {
 }
 
 // Helper: Draw pass arrows
-function drawPassArrows(ctx, passOptions, ballCarrier, toCanvasCoords, hoveredPlayer) {
-    const from = toCanvasCoords(ballCarrier.x, ballCarrier.y);
+function drawPassArrows(ctx, passOptions, source, toCanvasCoords, hoveredPlayer, isDashed = false) {
+    const from = toCanvasCoords(source.x, source.y);
 
     passOptions.forEach((option, index) => {
         const to = toCanvasCoords(option.target.x, option.target.y);
@@ -513,14 +542,20 @@ function drawPassArrows(ctx, passOptions, ballCarrier, toCanvasCoords, hoveredPl
         const alpha = isHovered ? 1 : 0.4;
         const lineWidth = isHovered ? 4 : 2;
 
-        // Draw arrow line
+        // Draw arrow line (dashed for What-If mode)
         ctx.beginPath();
+        if (isDashed) {
+            ctx.setLineDash([8, 5]);
+        }
         ctx.moveTo(from.x, from.y);
         ctx.lineTo(to.x, to.y);
         ctx.strokeStyle = color;
         ctx.globalAlpha = alpha;
         ctx.lineWidth = lineWidth;
         ctx.stroke();
+        if (isDashed) {
+            ctx.setLineDash([]);
+        }
 
         // Arrow head
         const angle = Math.atan2(to.y - from.y, to.x - from.x);

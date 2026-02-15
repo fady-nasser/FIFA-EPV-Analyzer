@@ -42,6 +42,9 @@ export default function App() {
     // Hover state
     const [hoveredPlayer, setHoveredPlayer] = useState(null);
 
+    // Hypothetical (What-If) carrier state
+    const [hypotheticalCarrier, setHypotheticalCarrier] = useState(null);
+
     // Upload modal state
     const [showUploadModal, setShowUploadModal] = useState(false);
 
@@ -197,9 +200,12 @@ export default function App() {
     useEffect(() => {
         if (!currentFrame) return;
 
-        // Find ball carrier
-        const carrier = findBallCarrier(currentFrame);
-        setBallCarrier(carrier);
+        // Find actual ball carrier
+        const actualCarrier = findBallCarrier(currentFrame);
+        setBallCarrier(actualCarrier);
+
+        // Use hypothetical carrier if set, otherwise use actual
+        const carrier = hypotheticalCarrier || actualCarrier;
 
         // Low resolution during playback to prevent lag
         const resolution = isPlaying ? 4 : 2;
@@ -258,10 +264,15 @@ export default function App() {
         const opponentPlayers = carrier.team === 'home' ? currentFrame.awayPlayers : currentFrame.homePlayers;
         const attackingRight = carrier.team === 'home' ? currentFrame.homeAttackingRight : !currentFrame.homeAttackingRight;
 
+        // In What-If mode, treat ball as being at the hypothetical carrier's position
+        const ballPosition = hypotheticalCarrier
+            ? { x: hypotheticalCarrier.x, y: hypotheticalCarrier.y, z: 0 }
+            : currentFrame.ball;
+
         const gameState = {
             teamPlayers,
             opponentPlayers,
-            ball: currentFrame.ball,
+            ball: ballPosition,
             attackingRight
         };
 
@@ -281,16 +292,17 @@ export default function App() {
         if (isPlaying && playbackSpeed > 1) {
             setPassOptions([]);
         } else {
-            // Find pass options
+            // Find pass options from the active (possibly hypothetical) carrier
             const teammates = getTeammates(currentFrame, carrier);
             const options = findPassOptions(carrier, teammates, gameState);
             setPassOptions(options);
         }
 
-    }, [currentFrame, currentFrameIndex, isPlaying, playbackSpeed, viewMode, contextualAnalysis]);
+    }, [currentFrame, currentFrameIndex, isPlaying, playbackSpeed, viewMode, contextualAnalysis, hypotheticalCarrier]);
 
     // Playback controls
     const handlePlay = useCallback(() => {
+        setHypotheticalCarrier(null); // Auto-reset What-If on play
         setIsPlaying(true);
     }, []);
 
@@ -299,14 +311,17 @@ export default function App() {
     }, []);
 
     const handleStepForward = useCallback(() => {
+        setHypotheticalCarrier(null); // Auto-reset What-If on step
         setCurrentFrameIndex(prev => Math.min(prev + 1, frames.length - 1));
     }, [frames.length]);
 
     const handleStepBackward = useCallback(() => {
+        setHypotheticalCarrier(null); // Auto-reset What-If on step
         setCurrentFrameIndex(prev => Math.max(prev - 1, 0));
     }, []);
 
     const handleSeek = useCallback((frameIndex) => {
+        setHypotheticalCarrier(null); // Auto-reset What-If on seek
         setCurrentFrameIndex(frameIndex);
     }, []);
 
@@ -324,6 +339,31 @@ export default function App() {
         setPassOptions([]);
         setBallCarrier(null);
         setViewMode('both');
+        setHypotheticalCarrier(null);
+    }, []);
+
+    // Handle player click for What-If mode
+    const handlePlayerClick = useCallback((player) => {
+        // Only enable What-If when paused
+        if (isPlaying) return;
+        // Only allow clicking teammates of the actual ball carrier
+        if (!ballCarrier) return;
+        if (player.team !== ballCarrier.team) return;
+        // Don't select the actual ball carrier
+        if (player.id === ballCarrier.id || player.jerseyNum === ballCarrier.jerseyNum) return;
+
+        // Toggle off if clicking the same hypothetical carrier
+        if (hypotheticalCarrier && (player.id === hypotheticalCarrier.id || player.jerseyNum === hypotheticalCarrier.jerseyNum)) {
+            setHypotheticalCarrier(null);
+            return;
+        }
+
+        setHypotheticalCarrier(player);
+    }, [isPlaying, ballCarrier, hypotheticalCarrier]);
+
+    // Reset hypothetical carrier
+    const handleResetHypothetical = useCallback(() => {
+        setHypotheticalCarrier(null);
     }, []);
 
     // Handle file upload from dashboard (inline)
@@ -832,6 +872,30 @@ export default function App() {
                 </div>
             </header>
 
+            {/* What-If Mode Banner */}
+            {hypotheticalCarrier && (
+                <div className="what-if-banner">
+                    <div className="what-if-banner__content">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                        <span className="what-if-banner__text">
+                            What-If Mode — Simulating #{hypotheticalCarrier.jerseyNum} as ball carrier
+                        </span>
+                    </div>
+                    <button
+                        className="what-if-reset-btn"
+                        onClick={handleResetHypothetical}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                        Reset to Actual Game State
+                    </button>
+                </div>
+            )}
+
             {/* Main content */}
             <main className="dashboard__main">
                 {/* Pitch */}
@@ -842,8 +906,11 @@ export default function App() {
                         passOptions={passOptions}
                         hoveredPlayer={hoveredPlayer}
                         onPlayerHover={handlePlayerHover}
+                        onPlayerClick={handlePlayerClick}
                         ballCarrier={ballCarrier}
+                        hypotheticalCarrier={hypotheticalCarrier}
                         showEPVOverlay={pitchStyle === 'heatmap'}
+                        isPaused={!isPlaying}
                     />
                 </div>
 
@@ -853,8 +920,10 @@ export default function App() {
                     hoveredPlayer={hoveredPlayer}
                     hoveredPlayerEPV={getHoveredPlayerEPV()}
                     passOptions={passOptions}
-                    ballCarrier={ballCarrier}
+                    ballCarrier={hypotheticalCarrier || ballCarrier}
                     onPassOptionHover={handlePlayerHover}
+                    isHypothetical={!!hypotheticalCarrier}
+                    hypotheticalJersey={hypotheticalCarrier?.jerseyNum}
                 />
             </main>
 

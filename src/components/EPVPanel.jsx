@@ -11,7 +11,9 @@ export default function EPVPanel({
     hoveredPlayerEPV,
     passOptions,
     ballCarrier,
-    onPassOptionHover
+    onPassOptionHover,
+    isHypothetical,
+    hypotheticalJersey
 }) {
     const epvAdded = hoveredPlayerEPV !== null ? hoveredPlayerEPV - currentEPV : null;
 
@@ -22,9 +24,19 @@ export default function EPVPanel({
 
     return (
         <div className="epv-panel">
+            {/* What-If Mode Indicator */}
+            {isHypothetical && (
+                <div className="epv-panel__whatif-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                    <span>What-If: #{hypotheticalJersey}</span>
+                </div>
+            )}
+
             {/* Current EPV */}
             <div className="epv-panel__section">
-                <span className="epv-panel__label">Current Possession Value</span>
+                <span className="epv-panel__label">{isHypothetical ? 'Hypothetical Possession Value' : 'Current Possession Value'}</span>
                 <span className="epv-panel__value epv-panel__value--current">
                     {(currentEPV * 100).toFixed(1)}%
                 </span>
